@@ -1,7 +1,17 @@
 #include "snake.h"
 
+void gotoxy(int x, int y)//将光标移动到（x,y）位置
+{
+	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD pos;
+	pos.X = x;
+	pos.Y = y;
+	SetConsoleCursorPosition(handle, pos);
+}
+
 void MapPrint(char arr[][LINE], int count)
 {
+	gotoxy(0, 0);
 	for (int i = 0; i < ROW; i++)
 	{
 		for (int j = 0; j < LINE; j++)
@@ -188,23 +198,13 @@ void Game()
 
 	body body[MAX] = { 0 };//蛇身坐标记录结构体数组
 
-	int a = 0;
 	while (1)
 	{
-
-		system("cls");
-
 		//生成食物
 		food(arr, &food_x, &food_y);
 		arr[food_x][food_y] = 3;
 
 		MapPrint(arr, count);//打印图形
-
-		if (a == 0)
-		{
-			system("pause");
-			a = 1;
-		}
 
 		if (count == 0)
 			arr[row][line] = 0;//没有身体的时候,蛇头原来位置变为空白
