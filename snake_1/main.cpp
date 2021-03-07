@@ -1,12 +1,11 @@
 #include "snake.h"
 
-
-
 int main()
 {
-	Game();
 
-	
+	Game();
+	printf("ÓÎÏ·½áÊø\n");
+
 	system("pause");
 	return 0;
 }

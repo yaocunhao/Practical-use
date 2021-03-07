@@ -1,45 +1,52 @@
 #include "snake.h"
 
-void MapPrint(char(*arr)[LINE])
+void MapPrint(char arr[][LINE], int count)
 {
 	for (int i = 0; i < ROW; i++)
 	{
 		for (int j = 0; j < LINE; j++)
 		{
 			//µÚÒ»ĞĞ£¬×îºóÒ»ĞĞ£¬µÚÒ»ÁĞ£¬×îºóÒ»ÁĞ¶¼ÊÇÇ½±Ú
-			if (arr[i][j]==1)
+			if (arr[i][j] == 1)
 				printf("¡ö");
+
 			else if (arr[i][j] == 2)
 				printf("¡Ñ");//ÉßÍ·
+
 			else if (arr[i][j] == 3)
-				printf("¡ñ");//´òÓ¡Ê³Îï
+				printf("¡è");//´òÓ¡Ê³Îï¡è
+
 			else if (arr[i][j] == 4)
-				printf("¡è");//´òÓ¡ÉíÌå
+				printf("¡ñ");//´òÓ¡ÉíÌå¡ñ
+
 			else
 				printf("  ");//Ò»¸öÇ½ÌåÕ¼Á½¸ö¿Õ¸ñ
 		}
 		printf("\n");
 	}
+	printf("				\n");
+	printf("             µ±Ç°µÃ·Ö:%d\n", count);
+	printf("				\n");
 }
-void Move(int *row, int *line,char *move)//ÉßÍ·ÒÆ¶¯º¯Êı£¬Í¨¹ı¶ÁÈ¡ÊäÈëµÄ¼üÅÌ·½Ïò¼üÀ´¸Ä±äÉßÍ··½Ïò
+void Move(int *row, int *line, char *move)//ÉßÍ·ÒÆ¶¯º¯Êı£¬Í¨¹ı¶ÁÈ¡ÊäÈëµÄ¼üÅÌ·½Ïò¼üÀ´¸Ä±äÉßÍ··½Ïò
 {
-		if (GetAsyncKeyState(VK_UP))//ÉÏ
-		{
-			*move = 'w';
-		}
-		else if (GetAsyncKeyState(VK_DOWN))//ÏÂ
-		{
-			*move = 's';
-		}
-		else if (GetAsyncKeyState(VK_LEFT))//×ó
-		{
-			*move = 'a';
-		}
-		else if (GetAsyncKeyState(VK_RIGHT))//ÓÒ
-		{
-			*move = 'd';
-		}
-		GetCoordinate(row, line, move);//½«»ñµÃµÄ·½Ïò¼üĞÅÏ¢´«Êä¹ıÈ¥
+	if (GetAsyncKeyState(VK_UP))//ÉÏ
+	{
+		*move = 'w';
+	}
+	else if (GetAsyncKeyState(VK_DOWN))//ÏÂ
+	{
+		*move = 's';
+	}
+	else if (GetAsyncKeyState(VK_LEFT))//×ó
+	{
+		*move = 'a';
+	}
+	else if (GetAsyncKeyState(VK_RIGHT))//ÓÒ
+	{
+		*move = 'd';
+	}
+	GetCoordinate(row, line, move);//½«»ñµÃµÄ·½Ïò¼üĞÅÏ¢´«Êä¹ıÈ¥
 }
 
 void GetCoordinate(int *row, int *line, char *move)//ÉßÍ·×Ô¶¯ÒÆ¶¯£¬Í¨¹ı»ñÈ¡µÄ·½ÏòĞÅÏ¢£¬¾ö¶¨ÉßÍ·ÍùÄÄ¸ö·½Ïò×Ô¶¯ÒÆ
@@ -53,7 +60,8 @@ void GetCoordinate(int *row, int *line, char *move)//ÉßÍ·×Ô¶¯ÒÆ¶¯£¬Í¨¹ı»ñÈ¡µÄ·½Ï
 	else if (*move == 'd')
 		(*line)++;
 }
-void food(char arr[][LINE],int *x,int *y)
+
+void food(char arr[][LINE], int *x, int *y)//Ëæ»úÉú³ÉÒ»¸öÊ³Îï
 {
 	int flag = 0;
 	for (int i = 0; i < ROW; i++)
@@ -66,24 +74,82 @@ void food(char arr[][LINE],int *x,int *y)
 	}
 	if (!flag)//Ã»ÓĞÊ³Îï¾ÍÉú³ÉÊ³Îï
 	{
-		*x = rand() % ROW;
-		*y = rand() % LINE;
+		//Ê³Îï²»ÄÜÔÚ±ß¿òÉÏ
+		*x = rand() % (ROW - 2) + 1;
+		*y = rand() % (LINE - 2) + 1;
 	}
 }
 
-void GetBody(char arr[][LINE],int food_x,int food_y,int row,int line,int temp_x,int temp_y)//»ñµÃÉßµÄÉíÌå
+void JudgeFood(int food_x, int food_y, int row, int line, int *count)//ÅĞ¶ÏÊÇ·ñ³Ôµ½Ê³Îï
 {
 	if (food_x == row&&food_y == line)//³Ôµ½Ê³Îï
 	{
-		arr[temp_x][temp_y] = 4;//ÉíÌå
+		(*count)++;//³Ôµ½Ê³ÎïÉíÌå¸öÊı+1
 	}
+}
+
+void GetBody(char arr[][LINE], body body[], int count, int temp_x, int temp_y)//ÉßÌå×ø±ê¸üĞÂ
+{
+	//±£ÁôÇ°Ò»¸öÉßÌåµÄ×ø±ê
+	int befor_x = 0;
+	int befor_y = 0;
+	if (count > 0)//×îÉÙÓĞÒ»¸öÉßÉí
+	{
+		//¼ÇÂ¼ÏÂ×îºóÒ»¸öÉßÉíµÄÎ»ÖÃ
+		befor_x = body[count - 1].x;
+		befor_y = body[count - 1].y;
+	}
+
+
+	int keep = count;//±£´æÒ»·İÉßÌå¸öÊı
+
+	while (count)//ÉßÌå×ø±ê¸²¸Ç£¬ºóÃæµÄ¸²¸ÇÇ°ÃæµÄ
+	{
+		if (count == 1)//Ö»ÓĞÒ»¸öÉßÌåÊ±£¬ÎªÔ­À´ÉßÍ·Î»ÖÃ
+		{
+			body[count - 1].x = temp_x;
+			body[count - 1].y = temp_y;
+		}
+		else
+		{
+			body[count - 1].x = body[count - 2].x;
+			body[count - 1].y = body[count - 2].y;
+		}
+		count--;
+	}
+
+	while (keep)//½«¶ÔÓ¦µÄÉßÌå×ø±ê¸³Öµ
+	{
+		arr[body[keep - 1].x][body[keep - 1].y] = 4;
+		keep--;
+	}
+
+	if (befor_x != 0)//×îºóÒ»¸öÉßÉíµÄÉÏÒ»´ÎËùÔÚÎ»ÖÃÇå¿Õ
+	{
+		arr[befor_x][befor_y] = 0;
+	}
+
+}
+
+int  Judge(char arr[][LINE], int row, int line)//ÅĞ¶ÏÊÇ·ñ×²Ç½
+{
+	if (arr[row][line] == 1)
+	{
+		printf("	 --------------\n");
+		printf("	|   ×²µ½Ç½±Ú   |\n");
+		printf("	|   ÓÎÏ·½áÊø   |\n");
+		printf("	 --------------\n");
+		system("pause");
+		return 0;
+	}
+	return 1;
 }
 
 void Game()
 {
-	char arr[ROW][LINE]=
+	char arr[ROW][LINE] =
 	{
-		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 		{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
 		{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
 		{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
@@ -118,33 +184,47 @@ void Game()
 	int temp_x = row;
 	int temp_y = line;
 
+	int count = 0;//ÉßÉíÌå¸öÊı
+
+	body body[MAX] = { 0 };//ÉßÉí×ø±ê¼ÇÂ¼½á¹¹ÌåÊı×é
+
+	int a = 0;
 	while (1)
 	{
-		
+
 		system("cls");
 
-		food(arr, &food_x, &food_y);//Éú³ÉÊ³Îï
+		//Éú³ÉÊ³Îï
+		food(arr, &food_x, &food_y);
 		arr[food_x][food_y] = 3;
 
-		MapPrint(arr);//´òÓ¡Í¼ĞÎ
+		MapPrint(arr, count);//´òÓ¡Í¼ĞÎ
 
-		arr[row][line] = 0;//ÉßÍ·Ô­À´Î»ÖÃ±äÎª¿Õ°×
-		
+		if (a == 0)
+		{
+			system("pause");
+			a = 1;
+		}
+
+		if (count == 0)
+			arr[row][line] = 0;//Ã»ÓĞÉíÌåµÄÊ±ºò,ÉßÍ·Ô­À´Î»ÖÃ±äÎª¿Õ°×
+
 		//±£ÁôÉßÍ·ÒÆ¶¯Ç°µÄÎ»ÖÃ
 		temp_x = row;
 		temp_y = line;
 
-		Move(&row, &line,&move);//ÉßÍ·ÒÆ¶¯
+		Move(&row, &line, &move);//ÉßÍ·ÒÆ¶¯
+
+		if (Judge(arr, line, row) == 0)//ÅĞ¶ÏÊÇ·ñ×²Ç½
+		{
+			break;
+		}
+
+		JudgeFood(food_x, food_y, row, line, &count);//ÅĞ¶ÏÊÇ·ñ³Ôµ½Ê³Îï
+		GetBody(arr, body, count, temp_x, temp_y);//ÉßÉí¹¹Ôì
 		arr[row][line] = 2;//ĞÂÎ»ÖÃ±ä³ÉÉßÍ·
 
-		GetBody(arr,food_x,food_y,row,line,temp_x,temp_y);//ÅĞ¶ÏÊÇ·ñ³Ôµ½Ê³Îï
-
 		Sleep(200);//Í¨¹ı¿ØÖÆĞİÃßÊ±¼äÀ´¿ØÖÆÉßÍ·ÒÆ¶¯ËÙ¶È
-
-
 	}
-
-	
-
 }
 
