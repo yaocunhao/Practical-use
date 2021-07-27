@@ -1,121 +1,129 @@
 #include "ConcurrentAlloc.h"
 
-void BenchmarkMalloc(size_t ntimes, size_t nworks, size_t rounds)
+#include "ConcurrentAlloc.h"
+
+void TestMalloc(size_t ThreadNum, size_t Number, size_t round)
 {
-	// nworks个线程
-	//每个线程跑rounds轮
-	//每个线程跑ntimes次
+	//ThreadNum个线程、每个线程跑Number轮、每轮申请round次空间释放round次空间
 
-	std::vector<std::thread> vthread(nworks);// nworks个线程，先用数组保存起来
-	size_t malloc_costtime = 0;
-	size_t free_costtime = 0;
+	std::vector<std::thread> Thread(ThreadNum);//threadNum个线程
+	size_t MallocTime = 0;
+	size_t FreeTime = 0;
 
-	for (size_t k = 0; k < nworks; ++k)
+	//ThreadNum个线程
+	for (size_t i = 0; i < ThreadNum; i++)
 	{
-		vthread[k] = std::thread([&]()
+		Thread[i] = std::thread([&]
 		{
-			std::vector<void*> v;
-			v.reserve(ntimes);
+			std::vector<void*> Memvector;//保存开辟出来的空间的地址
+			Memvector.resize(round);
 
-			for (size_t j = 0; j < rounds; ++j)//每个线程跑rounds轮
+			for (size_t j = 0; j < Number; j++)//每个线程跑Number次
 			{
+				//每个线程申请round次内存
 				size_t begin1 = clock();
-				for (size_t i = 0; i < ntimes; i++)//每个线程跑ntimes次
+				for (size_t k = 0; k < round; k++)
 				{
-					v.push_back(malloc(260));//线程开辟空间
+					Memvector[k] = malloc(100);
 				}
 				size_t end1 = clock();
 
+
+				//释放round次内存
 				size_t begin2 = clock();
-				for (size_t i = 0; i < ntimes; i++)	//空间的销毁
+				for (size_t k = 0; k < round; k++)
 				{
-					free(v[i]);
+					free(Memvector[k]);
 				}
 				size_t end2 = clock();
-				v.clear();
 
-				malloc_costtime += end1 - begin1;//[]表达式捕捉的变量，大家都可以用
-				free_costtime += end2 - begin2;
+				Memvector.clear();
+
+				MallocTime += end2 - begin1;//[]表达式捕捉的变量，大家都可以用
+				FreeTime += end1 - begin1;
+
 			}
 		});
 	}
 
-
-
-	for (auto& t : vthread)//等待线程
+	for (auto&e : Thread)
 	{
-		t.join();
+		e.join();
 	}
 
-	printf("%u个线程并发执行%u轮次，每轮次malloc %u次: 花费：%u ms\n", nworks, rounds, ntimes, malloc_costtime);
+	printf("%u个线程并发执行%u轮次，每轮次malloc %u次: 花费：%u ms\n", ThreadNum, round, Number, MallocTime);
 
-	printf("%u个线程并发执行%u轮次，每轮次free %u次: 花费：%u ms\n", nworks, rounds, ntimes, free_costtime);
+	printf("%u个线程并发执行%u轮次，每轮次free %u次: 花费：%u ms\n", ThreadNum, round, Number, FreeTime);
 
-	printf("%u个线程并发malloc&free %u次，总计花费：%u ms\n", nworks, nworks*rounds*ntimes, malloc_costtime + free_costtime);
+	printf("%u个线程并发执行malloc和free %u次，总计花费：%u ms\n", ThreadNum, ThreadNum*round*Number, MallocTime + FreeTime);
 }
 
 
-// 单轮次申请释放次数 线程数 轮次
-void BenchmarkConcurrentMalloc(size_t ntimes, size_t nworks, size_t rounds)
+void TestConcurrentAlloc(size_t ThreadNum, size_t Number, size_t round)
 {
-	std::vector<std::thread> vthread(nworks); // n
-	size_t malloc_costtime = 0;
-	size_t free_costtime = 0;
+	std::vector<std::thread> Thread(ThreadNum);//threadNum个线程
+	size_t MallocTime = 0;
+	size_t FreeTime = 0;
 
-	for (size_t k = 0; k < nworks; ++k)
+	//ThreadNum个线程
+	for (size_t i = 0; i < ThreadNum; i++)
 	{
-		vthread[k] = std::thread([&]() {
-			std::vector<void*> v;
-			v.reserve(ntimes);
+		Thread[i] = std::thread([&]
+		{
+			std::vector<void*> Memvector;//保存开辟出来的空间的地址
+			Memvector.resize(round);
 
-			for (size_t j = 0; j < rounds; ++j)
+			for (size_t j = 0; j < Number; j++)//每个线程跑Number次
 			{
+				//每个线程申请round次内存
 				size_t begin1 = clock();
-				for (size_t i = 0; i < ntimes; i++)
+				for (size_t k = 0; k < round; k++)
 				{
-					v.push_back(ConcurrentAlloc(260));
+					Memvector[k] = ConcurrentAlloc(100);
 				}
 				size_t end1 = clock();
 
+
+				//释放round次内存
 				size_t begin2 = clock();
-				for (size_t i = 0; i < ntimes; i++)
+				for (size_t k = 0; k < round; k++)
 				{
-					ConcurrentFree(v[i]);
+					ConcurrentFree(Memvector[k]);
 				}
 				size_t end2 = clock();
-				v.clear();
 
-				malloc_costtime += end1 - begin1;
-				free_costtime += end2 - begin2;
+				Memvector.clear();
+
+				MallocTime += end2 - begin1;//[]表达式捕捉的变量，大家都可以用
+				FreeTime += end1 - begin1;
+
 			}
 		});
 	}
 
-	for (auto& t : vthread)
+	for (auto&e : Thread)
 	{
-		t.join();
+		e.join();
 	}
 
-	printf("%u个线程并发执行%u轮次，每轮次concurrent alloc %u次: 花费：%u ms\n",
-		nworks, rounds, ntimes, malloc_costtime);
+	printf("%u个线程并发执行%u轮次，每轮次malloc %u次: 花费：%u ms\n", ThreadNum, round, Number, MallocTime);
 
-	printf("%u个线程并发执行%u轮次，每轮次concurrent dealloc %u次: 花费：%u ms\n",
-		nworks, rounds, ntimes, free_costtime);
+	printf("%u个线程并发执行%u轮次，每轮次free %u次: 花费：%u ms\n", ThreadNum, round, Number, FreeTime);
 
-	printf("%u个线程并发concurrent alloc&dealloc %u次，总计花费：%u ms\n",
-		nworks, nworks*rounds*ntimes, malloc_costtime + free_costtime);
+	printf("%u个线程并发执行malloc和free %u次，总计花费：%u ms\n", ThreadNum, ThreadNum*round*Number, MallocTime + FreeTime);
 }
 
 int main()
 {
-	cout << "==========================================================" << endl;
-	BenchmarkMalloc(1000, 6, 6);
+	cout << "-------------------------------Malloc-------------------------------------" << endl;
+	TestMalloc(6, 6, 2000);
 	cout << endl << endl;
 
-	BenchmarkConcurrentMalloc(1000, 6, 6);
-	cout << "==========================================================" << endl;
+	cout << "-------------------------CouncurrentAlloc---------------------------------" << endl;
+
+	TestConcurrentAlloc(6, 6, 2000);
+
 
 	getchar();
 	return 0;
 }
-
