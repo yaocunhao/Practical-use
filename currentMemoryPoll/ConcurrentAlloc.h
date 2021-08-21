@@ -4,7 +4,6 @@
 #include "ThreadCache.h"
 #include "PageCache.h"
 
-//¹È¸èÀïÃæ½Ð×ö tcmalloc(szie_t size)
 static  void *ConcurrentAlloc(size_t size)
 {
 

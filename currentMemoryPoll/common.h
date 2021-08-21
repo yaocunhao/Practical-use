@@ -40,7 +40,7 @@ class SizeClass
 {
 public:
 	// 控制在1%-12%左右的内碎片浪费
-	// [1,128]				8byte对齐   		freelist[0,16)
+	// [1,128]				8byte对齐       freelist[0,16)
 	// [129,1024]			16byte对齐		freelist[16,72)
 	// [1025,8*1024]		128byte对齐		freelist[72,128)
 	// [8*1024+1,64*1024]	1024byte对齐  	freelist[128,184)
@@ -60,7 +60,7 @@ public:
 	}
 
 	// 对齐大小计算，浪费大概在1%-12%左右
-	static inline size_t RoundUp(size_t bytes)
+	static inline size_t RoundUp(size_t bytes)//传入一个需要的内存大小，通过算法对应到映射的位置
 	{
 		//assert(bytes <= MAX_BYTES);
 		if (bytes <= 128){
@@ -77,12 +77,13 @@ public:
 		}
 		else
 		{
-			return _RoundUp(bytes, 1 << PAGE_SHIFT);
+			return _RoundUp(bytes, 1 << PAGE_SHIFT);//1页为单位进行内存对齐
 		}
 		return -1;
 	}
 
 
+//计算映射的位置
 	inline static size_t _Index(size_t bytes, size_t ANumber)//传入对象大小和对齐数
 	{
 		// 假设当前对齐数为8 ->ANumber=3-> bytes+(1<<3)=bytes+7:在下一个位置
@@ -325,7 +326,7 @@ private:
 //向系统以页为单位申请内存
 inline static void* SystemAlloc(size_t kpage)
 {
-#ifdef _WIN32
+#ifdef _WIN32_
 	//32位下，(1<<12)=1k，
 	void* ptr = VirtualAlloc(0, kpage*(1 << PAGE_SHIFT),MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #else
